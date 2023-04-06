@@ -82,17 +82,33 @@ int main() {
 
     // Load the personnel records from a text file
     FILE *fp = fopen("preloaded.txt", "r");
-    if (fp == NULL) {
+    // new pointer for personel.txt = fopen(thiung)
+    FILE *fp2 = fopen("personel.txt", "r");
+    // fp == NULL || personel.txt == NULL 
+
+    if (fp == NULL || fp2 == NULL) {
         printf("Error loading personnel records.\n");
         exit(1);
     }
-
+    // if statement for fp != null
+    if(fp != NULL){
     fscanf(fp, "%d,%[^,],%[^,],%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
            personnelList[numPersonnel].password, &personnelList[numPersonnel].active, &personnelList[numPersonnel].access);
     numPersonnel++;
+    }
+    // if statement for new pointer != null
+
+    if(fp2 != NULL){
+
+        fscanf(fp2, "%d,%[^,],%[^,],%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
+           personnelList[numPersonnel].password, &personnelList[numPersonnel].active, &personnelList[numPersonnel].access); 
+    numPersonnel++;
+    }
 
     fclose(fp);
+    fclose(fp2);
 
+//fclose (newpointer)
     // Display the Login Menu
     while (1) {
         printf("\n---------------------\n");
@@ -784,7 +800,7 @@ printf("\nConfirm to add new personnel? (Y/N): ");
 scanf(" %c", &confirm);
 
 if (confirm == 'Y' || confirm == 'y') {
-	FILE *fp = fopen("personel.txt", "w");
+	FILE *fp = fopen("personel.txt", "a"); //changed "w" to "a"
     personnelList[numPersonnel] = newPersonnel;
     fprintf(fp, "%d,%s,%s,%d,%d\n", numPersonnel + 1, personnelList[numPersonnel].username,
            personnelList[numPersonnel].password, 1, 2);
