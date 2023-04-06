@@ -108,7 +108,6 @@ int main() {
         for (int i = 0; i < numPersonnel; i++) {
             if (strcmp(username, personnelList[i].username) == 0 && strcmp(password, personnelList[i].password) == 0) {
                 personnelIndex = i;
-                
                 break;
             }
         }
@@ -695,8 +694,15 @@ void addTask() {
 
     // Add the new task to the taskList if the user confirms
     if (confirm == 'Y' || confirm == 'y') {
-        taskList[numTasks] = newTask;
-        numTasks++;
+    	taskList[numTasks] = newTask;
+    FILE *fp = fopen("task.txt", "a");
+    
+    fprintf(fp, "%d,%d,%s,%d,%s,%s,%d,%d,%d\n", numTasks + 1, taskList[numTasks].sequence, taskList[numTasks].description, taskList[numTasks].projectID,taskList[numTasks].startdate,
+           taskList[numTasks].enddate,taskList[numTasks].totalDuration,taskList[numTasks].status, taskList[numTasks].assignID);
+    numTasks++;
+    fclose(fp);
+        
+        
         printf("\nTask added successfully.\n");
     } else {
         printf("\nTask not added.\n");
@@ -717,7 +723,7 @@ void addProject() {
     printf("Enter the name of the project: ");
     scanf("%s", newProject.name);
     printf("Enter the description of the project: ");
-    scanf(" %[^\n]s", newProject.description);
+    scanf("%s", newProject.description);
     printf("Enter the personnel ID to assign the project: ");
     scanf("%d", &newProject.assignID);
 
@@ -738,8 +744,15 @@ void addProject() {
     // Add the new project to the project list if confirmed
     if (confirm == 'Y' || confirm == 'y') {
         projectList[numProjects] = newProject;
-        numProjects++;
+        
+        
+        FILE *fp = fopen("proj.txt", "a");
+    fprintf(fp, "%d,%s,%d,%d,%s\n", projectList[numProjects].projectID, projectList[numProjects].name, 1, 2, projectList[numProjects].description);
+    numProjects++;
+        fclose(fp);
         printf("\nProject added successfully.\n");
+        
+        
     } else {
         printf("\nOperation canceled.\n");
     }
@@ -771,11 +784,12 @@ printf("\nConfirm to add new personnel? (Y/N): ");
 scanf(" %c", &confirm);
 
 if (confirm == 'Y' || confirm == 'y') {
-	FILE *fp = fopen("preloaded.txt", "a");
+	FILE *fp = fopen("personel.txt", "w");
     personnelList[numPersonnel] = newPersonnel;
-    fprintf(fp, "%d,%s,%s,%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
+    fprintf(fp, "%d,%s,%s,%d,%d\n", numPersonnel + 1, personnelList[numPersonnel].username,
            personnelList[numPersonnel].password, 1, 2);
     numPersonnel++;
+    fclose(fp);
     printf("New personnel added successfully.\n");
 } else {
     printf("New personnel not added.\n");
