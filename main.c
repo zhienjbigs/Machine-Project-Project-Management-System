@@ -86,7 +86,7 @@ int main() {
     FILE *fp2 = fopen("personel.txt", "r");
     // fp == NULL || personel.txt == NULL 
 
-    if (fp == NULL || fp2 == NULL) {
+    if (fp == NULL){
         printf("Error loading personnel records.\n");
         exit(1);
     }
