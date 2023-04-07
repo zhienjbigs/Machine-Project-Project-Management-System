@@ -191,7 +191,7 @@ printf("6. Show Project Details\n");
 printf("7. Show Delayed Task\n");
 printf("8. Run Project Completion\n");
 printf("9. Back to Login Menu\n");
-printf("10. Exit Program"); 
+printf("10. Exit Program\n"); 
 printf("Enter choice: ");
 scanf("%d", &choice);
             switch (choice) {
@@ -238,7 +238,7 @@ printf("1. Show Today’s Task\n");
 printf("2. Show All Assigned Task\n");
 printf("3. Update Task Status\n");
 printf("4. Back to Main Menu\n");
-printf("5. Exit Program");
+printf("5. Exit Program\n");
 printf("Enter choice: ");
 scanf("%d", &choice);
             switch (choice) {
