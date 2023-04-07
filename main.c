@@ -76,6 +76,7 @@ void showTodayTasks(int assignID);
 void showAssignedTask();
 void updateTaskStatus();
 int main() {
+    int loginloop = 1;
     int choice;
     char username[MAX_NAME_LEN];
     char password[MAX_NAME_LEN];
@@ -97,7 +98,6 @@ int main() {
     numPersonnel++;
     }
     // if statement for new pointer != null
-
     if(fp2 != NULL){
 
         fscanf(fp2, "%d,%[^,],%[^,],%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
@@ -110,7 +110,8 @@ int main() {
 
 //fclose (newpointer)
     // Display the Login Menu
-    while (1) {
+
+    while (loginloop) { //changed the condition from (1) to (loginloop) to make it zero when user wants to exit program
         printf("\n---------------------\n");
         printf("     Login Menu\n");
         printf("---------------------\n");
@@ -134,7 +135,7 @@ int main() {
         }
         // If the personnel has access value of 1 (Admin), display the Admin Menu
         else if(personnelList[personnelIndex].access == 1) {
-while (choice != 6) {
+while ( choice != 6 && choice != 7) { //dalawang condition for iterative since dalawa panglabas ng loop, si logout at si exit
 printf("\n---------------------\n");
 printf(" Admin Menu\n");
 printf("---------------------\n");
@@ -144,9 +145,10 @@ printf("3. Delete User\n");
 printf("4. Archive User\n");
 printf("5. Assign Project\n");
 printf("6. Back to Login Menu\n");
+printf("7. Exit Program\n");
 printf("Enter choice: ");
 scanf("%d", &choice);
-            switch (choice) {
+            switch (choice) { 
                 case 1:
                     addPersonnel();
                     break;
@@ -164,14 +166,19 @@ scanf("%d", &choice);
                     break;
                 case 6:
                     break;
-                default:
-                    printf("Invalid choice. Please try again.\n");
+                case 7: //added
+                    printf("Thank you for using our program");
+                    loginloop = 0; //ends the entire program but not without printing thank you for using our program
+
             }
+        if (choice < 1 || choice > 7){ //hard coded but please understand lmao 
+            printf("Invalid choice, please try again");
+        }
         }
     }
     // If the personnel has access value of 2 (Manager), display the Manager Menu
     else if (personnelList[personnelIndex].access == 2) {
-        while (choice != 9) {
+        while (choice != 9 && choice != 10) { //added
 printf("\n---------------------\n");
 printf(" Manager Menu\n");
 printf("---------------------\n");
@@ -184,6 +191,7 @@ printf("6. Show Project Details\n");
 printf("7. Show Delayed Task\n");
 printf("8. Run Project Completion\n");
 printf("9. Back to Login Menu\n");
+printf("10. Exit Program"); 
 printf("Enter choice: ");
 scanf("%d", &choice);
             switch (choice) {
@@ -213,12 +221,16 @@ scanf("%d", &choice);
                     break;
                 case 9:
                     break;
-                default:
-                    printf("Invalid choice. Please try again.\n");
+                case 10: //added
+                    printf("Thank you for using our program");
+                    loginloop = 0;
             }
+        if (choice < 1 || choice > 10){//added
+            printf("Invalid choice, please try again");
+        }
         }
     }else if (personnelList[personnelIndex].access == 3) {
-		while (choice != 9) {
+		while (choice != 4 && choice != 5) {//added
 printf("\n---------------------\n");
 printf(" User Menu\n");
 printf("---------------------\n");
@@ -226,6 +238,7 @@ printf("1. Show Today’s Task\n");
 printf("2. Show All Assigned Task\n");
 printf("3. Update Task Status\n");
 printf("4. Back to Main Menu\n");
+printf("5. Exit Program");
 printf("Enter choice: ");
 scanf("%d", &choice);
             switch (choice) {
@@ -240,9 +253,13 @@ scanf("%d", &choice);
                     break;
                 case 4:
                     break;
-                default:
-                    printf("Invalid choice. Please try again.\n");
+                case 5: //added
+                    printf("Thank you for using our program");
+                    loginloop = 0;
             }
+        if(choice < 1 || choice > 5){ //added 
+            printf("Invalid choice, please try again");
+        }
         }
 	}
 }
