@@ -1,972 +1,1253 @@
+/*********************************************************************************************************
+This is to certify that this project is my own work, based on my personal efforts in studying and applying the concepts learned. I
+have constructed the functions and their respective algorithms and corresponding code by myself. The program was run, tested,
+and debugged by my own efforts. I further certify that I have not copied in part or whole or otherwise plagiarized the work of other
+students and/or persons.
+*********************************************************************************************************/
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
-// Define the maximum length of each string field
-#define MAX_NAME_LEN 40
-#define MAX_DESC_LEN 100
-#define MAX_DATE_LEN 11 // MM/DD/YYYY format
-
-// Define the maximum number of records to be stored
-#define MAX_PERSONNEL 100
-#define MAX_PROJECTS 100
-#define MAX_TASKS 100
-
-// Define the structures for Personnel, Project and Task records
-typedef struct {
-    int personnelID;
-    char username[MAX_NAME_LEN];
-    char password[MAX_NAME_LEN];
-    int active;
-    int access;
-} Personnel;
-
-typedef struct {
-    int projectID;
-    char name[MAX_NAME_LEN];
-    int status;
-    float completion;
-    char description[MAX_DESC_LEN];
-    int assignID;
-} Project;
-
-typedef struct {
-    int taskID;
-    char name[MAX_NAME_LEN];
-    int sequence;
-    char description[MAX_DESC_LEN];
-    int projectID;
-    char startdate[MAX_DATE_LEN];
-    char enddate[MAX_DATE_LEN];
-    float totalDuration;
-    int status;
-    int assignID;
-} Task;
-
-// Declare the global variables to hold the records
-Personnel personnelList[MAX_PERSONNEL];
-int numPersonnel = 0;
-
-Project projectList[MAX_PROJECTS];
-int numProjects = 0;
-
-Task taskList[MAX_TASKS];
-int numTasks = 0;
-
-// Declare the functions for Personnel, Project and Task management
-void addPersonnel();
-void updatePersonnel();
-void deletePersonnel();
-void archivePersonnel();
-void assignProject();
-void addProject();
-void updateTask();
-void addTask();
-void showPersonnelList();
-void assignTask();
-int findTaskIndex(int taskID);
-void clearBuffer();
-void runProjectCompletion();
-void showDelayedTask();
-void showProjectDetails();
-char *getCurrentDate();
-char* getProjectName(int projectID);
-char* getPersonnelName(int personnelID);
-void showTodayTasks(int assignID);
-void showAssignedTask();
-void updateTaskStatus();
-int main() {
-    int loginloop = 1;
-    int choice;
-    char username[MAX_NAME_LEN];
-    char password[MAX_NAME_LEN];
-
-    // Load the personnel records from a text file
-    FILE *fp = fopen("preloaded.txt", "r");
-    // new pointer for personel.txt = fopen(thiung)
-    FILE *fp2 = fopen("personel.txt", "r");
-    // fp == NULL || personel.txt == NULL 
-
-    if (fp == NULL){
-        printf("Error loading personnel records.\n");
-        exit(1);
-    }
-    // if statement for fp != null
-    if(fp != NULL){
-    fscanf(fp, "%d,%[^,],%[^,],%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
-           personnelList[numPersonnel].password, &personnelList[numPersonnel].active, &personnelList[numPersonnel].access);
-    numPersonnel++;
-    }
-    // if statement for new pointer != null
-    if(fp2 != NULL){
-
-        fscanf(fp2, "%d,%[^,],%[^,],%d,%d\n", &personnelList[numPersonnel].personnelID, personnelList[numPersonnel].username,
-           personnelList[numPersonnel].password, &personnelList[numPersonnel].active, &personnelList[numPersonnel].access); 
-    numPersonnel++;
-    }
-
-    fclose(fp);
-    fclose(fp2);
-
-//fclose (newpointer)
-    // Display the Login Menu
-
-    while (loginloop) { //changed the condition from (1) to (loginloop) to make it zero when user wants to exit program
-        printf("\n---------------------\n");
-        printf("     Login Menu\n");
-        printf("---------------------\n");
-        printf("Username: ");
-        scanf("%s", username);
-        printf("Password: ");
-        scanf("%s", password);
-
-        int personnelIndex = -1;
-        // Find the personnel record with the provided username and password
-        for (int i = 0; i < numPersonnel; i++) {
-            if (strcmp(username, personnelList[i].username) == 0 && strcmp(password, personnelList[i].password) == 0) {
-                personnelIndex = i;
-                break;
-            }
-        }
-
-        // If the personnel is not found or the account is archived, display an error message and show the Login Menu again
-        if (personnelIndex == -1 || personnelList[personnelIndex].active == 2) {
-            printf("\nInvalid username or password. Please try again.\n");
-        }
-        // If the personnel has access value of 1 (Admin), display the Admin Menu
-        else if(personnelList[personnelIndex].access == 1) {
-while ( choice != 6 && choice != 7) { //dalawang condition for iterative since dalawa panglabas ng loop, si logout at si exit
-printf("\n---------------------\n");
-printf(" Admin Menu\n");
-printf("---------------------\n");
-printf("1. Add New User\n");
-printf("2. Update User\n");
-printf("3. Delete User\n");
-printf("4. Archive User\n");
-printf("5. Assign Project\n");
-printf("6. Back to Login Menu\n");
-printf("7. Exit Program\n");
-printf("Enter choice: ");
-scanf("%d", &choice);
-            switch (choice) { 
-                case 1:
-                    addPersonnel();
-                    break;
-                case 2:
-                    updatePersonnel();
-                    break;
-                case 3:
-                    deletePersonnel();
-                    break;
-                case 4:
-                    archivePersonnel();
-                    break;
-                case 5:
-                    assignProject();
-                    break;
-                case 6:
-                    break;
-                case 7: //added
-                    printf("Thank you for using our program");
-                    loginloop = 0; //ends the entire program but not without printing thank you for using our program
-
-            }
-        if (choice < 1 || choice > 7){ //hard coded but please understand lmao 
-            printf("Invalid choice, please try again");
-        }
-        }
-    }
-    // If the personnel has access value of 2 (Manager), display the Manager Menu
-    else if (personnelList[personnelIndex].access == 2) {
-        while (choice != 9 && choice != 10) { //added
-printf("\n---------------------\n");
-printf(" Manager Menu\n");
-printf("---------------------\n");
-printf("1. Add New Project\n");
-printf("2. Add New Task\n");
-printf("3. Update Task\n");
-printf("4. Show Personnel List\n");
-printf("5. Assign Task\n");
-printf("6. Show Project Details\n");
-printf("7. Show Delayed Task\n");
-printf("8. Run Project Completion\n");
-printf("9. Back to Login Menu\n");
-printf("10. Exit Program\n"); 
-printf("Enter choice: ");
-scanf("%d", &choice);
-            switch (choice) {
-                case 1:
-                    addProject();
-                    break;
-                case 2:
-                    addTask();
-                    break;
-                case 3:
-                    updateTask();
-                    break;
-                case 4:
-                    showPersonnelList();
-                    break;
-                case 5:
-                    assignTask();
-                    break;
-                case 6:
-                    showProjectDetails();
-                    break;
-                case 7:
-                    showDelayedTask();
-                    break;
-                case 8:
-                    runProjectCompletion();
-                    break;
-                case 9:
-                    break;
-                case 10: //added
-                    printf("Thank you for using our program");
-                    loginloop = 0;
-            }
-        if (choice < 1 || choice > 10){//added
-            printf("Invalid choice, please try again");
-        }
-        }
-    }else if (personnelList[personnelIndex].access == 3) {
-		while (choice != 4 && choice != 5) {//added
-printf("\n---------------------\n");
-printf(" User Menu\n");
-printf("---------------------\n");
-printf("1. Show Today’s Task\n");
-printf("2. Show All Assigned Task\n");
-printf("3. Update Task Status\n");
-printf("4. Back to Main Menu\n");
-printf("5. Exit Program\n");
-printf("Enter choice: ");
-scanf("%d", &choice);
-            switch (choice) {
-                case 1:
-                    addProject();
-                    break;
-                case 2:
-                    addTask();
-                    break;
-                case 3:
-                    updateTask();
-                    break;
-                case 4:
-                    break;
-                case 5: //added
-                    printf("Thank you for using our program");
-                    loginloop = 0;
-            }
-        if(choice < 1 || choice > 5){ //added 
-            printf("Invalid choice, please try again");
-        }
-        }
-	}
-}
-
-return 0;
-}
-void updateTask() {
-    int taskID, choice;
-    int personnelID = personnelList[0].personnelID; // get the ID of the logged-in user
-    int taskIndex = -1;
-    
-    // Display all tasks assigned to the login user
-    printf("\nAll Tasks Assigned to You:\n");
-    printf("ID\tName\t\t\t\tStatus\n");
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].assignID == personnelID) {
-            printf("%d\t%-30s\t", taskList[i].taskID, taskList[i].name);
-            switch (taskList[i].status) {
-                case 1:
-                    printf("Not Started\n");
-                    break;
-                case 2:
-                    printf("In Progress\n");
-                    break;
-                case 3:
-                    printf("Done\n");
-                    break;
-                default:
-                    printf("Unknown\n");
-            }
-        }
-    }
-    
-    // Ask the user to enter the task ID to be updated
-    printf("\nEnter the Task ID to Update: ");
-    scanf("%d", &taskID);
-    taskIndex = findTaskIndex(taskID);
-    
-    if (taskIndex == -1) {
-        printf("\nTask ID %d not found.\n", taskID);
-    }
-    else if (taskList[taskIndex].assignID != personnelID) {
-        printf("\nTask ID %d is not assigned to you.\n", taskID);
-    }
-    else {
-        // Ask the user to select the new status for the task
-        printf("\nSelect the New Task Status:\n");
-        printf("1 - Not Started\n");
-        printf("2 - In Progress\n");
-        printf("3 - Done\n");
-        printf("Enter choice: ");
-        scanf("%d", &choice);
-        
-        // Update the task status based on the user's choice
-        switch (choice) {
-            case 1:
-                taskList[taskIndex].status = 1;
-                printf("\nTask status updated to Not Started.\n");
-                break;
-            case 2:
-                taskList[taskIndex].status = 2;
-                printf("\nTask status updated to In Progress.\n");
-                break;
-            case 3:
-                taskList[taskIndex].status = 3;
-                printf("\nTask status updated to Done.\n");
-                break;
-            default:
-                printf("\nInvalid choice. Task status not updated.\n");
-        }
-    }
-}
-
-void showAssignedTask() {
-    int assignID;
-    printf("Enter your login user ID: ");
-    scanf("%d", &assignID);
-    printf("Assigned tasks:\n");
-    int found = 0;
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].assignID == assignID) {
-            printf("Task ID: %d\n", taskList[i].taskID);
-            printf("Name: %s\n", taskList[i].name);
-            printf("Project ID: %d\n", taskList[i].projectID);
-            printf("Start date: %s\n", taskList[i].startdate);
-            printf("End date: %s\n\n", taskList[i].enddate);
-            found = 1;
-        }
-    }
-    if (!found) {
-        printf("No assigned tasks found.\n");
-    }
-}
-
-void showTodayTasks(int assignID) {
-    time_t now;
-    struct tm *local;
-    char curr_date[MAX_DATE_LEN];
-    time(&now);
-    local = localtime(&now);
-    strftime(curr_date, sizeof(curr_date), "%m/%d/%Y", local);
-
-    int found = 0;
-    printf("\nTasks assigned to you for today (%s):\n", curr_date);
-    printf("------------------------------------------------------\n");
-    printf("ID\tName\t\tProject\t\tStart Date\tEnd Date\n");
-    printf("------------------------------------------------------\n");
-
-    for (int i = 0; i < numTasks; i++) {
-        if (strcmp(taskList[i].startdate, curr_date) <= 0 && strcmp(taskList[i].enddate, curr_date) >= 0 && taskList[i].assignID == assignID) {
-            printf("%d\t%-16s\t%-16s\t%s\t%s\n", taskList[i].taskID, taskList[i].name, getProjectName(taskList[i].projectID), taskList[i].startdate, taskList[i].enddate);
-            found = 1;
-        }
-    }
-
-    if (!found) {
-        printf("No tasks assigned to you for today (%s).\n", curr_date);
-    }
-}
-
-// Return the name of the personnel with the given ID
-char* getPersonnelName(int personnelID) {
-    for (int i = 0; i < numPersonnel; i++) {
-        if (personnelList[i].personnelID == personnelID) {
-            return personnelList[i].username;
-        }
-    }
-    return NULL;
-}
-
-char* getProjectName(int projectID) {
-    for (int i = 0; i < numProjects; i++) {
-        if (projectList[i].projectID == projectID) {
-            return projectList[i].name;
-        }
-    }
-    return "Unknown";
-}
-
-char *getCurrentDate() {
-    time_t now = time(NULL);
-    struct tm *t = localtime(&now);
-    static char date[11];
-    strftime(date, sizeof(date), "%m/%d/%Y", t);
-    return date;
-}
-void runProjectCompletion() {
-    int projectId;
-    printf("\nEnter the project ID: ");
-    scanf("%d", &projectId);
-    
-    // Find the project with the provided projectId
-    int projectIndex = -1;
-    for (int i = 0; i < numProjects; i++) {
-        if (projectList[i].projectID == projectId) {
-            projectIndex = i;
-            break;
-        }
-    }
-    
-    // If the project is not found, display an error message
-    if (projectIndex == -1) {
-        printf("Project not found.\n");
-        return;
-    }
-    
-    // Calculate project completion
-    float totalDuration = 0.0;
-    float completedDuration = 0.0;
-    
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].projectID == projectId) {
-            totalDuration += taskList[i].totalDuration;
-            if (taskList[i].status == 2) {
-                completedDuration += taskList[i].totalDuration;
-            }
-        }
-    }
-    
-    projectList[projectIndex].completion = (completedDuration / totalDuration) * 100;
-    printf("Project completion calculated.\n");
-}
-
-void showDelayedTask() {
-    int count = 0;
-    printf("\nDelayed Tasks:\n");
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].status == 0 && strcmp(taskList[i].enddate, getCurrentDate()) < 0) {
-            printf("%d. %s\n", ++count, taskList[i].name);
-            printf("    Project: %s\n", getProjectName(taskList[i].projectID));
-            printf("    Assigned to: %s\n", getPersonnelName(taskList[i].assignID));
-            printf("    End Date: %s\n", taskList[i].enddate);
-        }
-    }
-    if (count == 0) {
-        printf("No delayed tasks found.\n");
-    }
-}
-
-void showProjectDetails() {
-    // Display the list of active projects
-    printf("\nActive Projects:\n");
-    printf("ID\tName\n");
-    for (int i = 0; i < numProjects; i++) {
-        if (projectList[i].status == 1) {
-            printf("%d\t%s\n", projectList[i].projectID, projectList[i].name);
-        }
-    }
-
-    // Ask for the project ID to display details for
-    int projectID;
-    printf("\nEnter the ID of the project to display details for: ");
-    scanf("%d", &projectID);
-
-    // Find the project record with the provided project ID
-    int projectIndex = -1;
-    for (int i = 0; i < numProjects; i++) {
-        if (projectList[i].projectID == projectID) {
-            projectIndex = i;
-            break;
-        }
-    }
-
-    // If the project is not found, display an error message and return
-    if (projectIndex == -1) {
-        printf("\nProject with ID %d not found.\n", projectID);
-        return;
-    }
-
-    // Display the project details
-    printf("\nProject Details:\n");
-    printf("Name: %s\n", projectList[projectIndex].name);
-    printf("Status: %d\n", projectList[projectIndex].status);
-    printf("Completion: %.2f%%\n", projectList[projectIndex].completion);
-    printf("Description: %s\n", projectList[projectIndex].description);
-    printf("Assigned to Personnel ID: %d\n", projectList[projectIndex].assignID);
-
-    // Display the tasks for the project
-    printf("\nTasks:\n");
-    printf("ID\tName\tSequence\tStatus\tAssigned to Personnel ID\n");
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].projectID == projectID) {
-            printf("%d\t%s\t%d\t\t%d\t\t%d\n", taskList[i].taskID, taskList[i].name,
-                taskList[i].sequence, taskList[i].status, taskList[i].assignID);
-        }
-    }
-}
-
-void assignTask() {
-    int taskID, personnelID, taskIndex, personnelIndex;
-
-    // Ask for the taskID
-    printf("Enter taskID to assign: ");
-    scanf("%d", &taskID);
-
-    // Find the task record with the provided taskID
-    taskIndex = -1;
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].taskID == taskID) {
-            taskIndex = i;
-            break;
-        }
-    }
-
-    // If the task is not found, display an error message and return to the Manager Menu
-    if (taskIndex == -1) {
-        printf("Task not found. Please try again.\n");
-        return;
-    }
-
-    // Show the task details
-    printf("Task details:\n");
-    printf("Name: %s\n", taskList[taskIndex].name);
-    printf("Project ID: %d\n", taskList[taskIndex].projectID);
-    printf("Start Date: %s\n", taskList[taskIndex].startdate);
-    printf("End Date: %s\n", taskList[taskIndex].enddate);
-    printf("Status: %d\n", taskList[taskIndex].status);
-
-    // If the task is already assigned, display an error message and return to the Manager Menu
-    if (taskList[taskIndex].assignID != -1) {
-        printf("Task is already assigned. Please try again.\n");
-        return;
-    }
-
-    // Ask for the personnelID
-    printf("Enter personnelID to assign to this task: ");
-    scanf("%d", &personnelID);
-
-    // Find the personnel record with the provided personnelID
-    personnelIndex = -1;
-    for (int i = 0; i < numPersonnel; i++) {
-        if (personnelList[i].personnelID == personnelID) {
-            personnelIndex = i;
-            break;
-        }
-    }
-
-    // If the personnel is not found, display an error message and return to the Manager Menu
-    if (personnelIndex == -1) {
-        printf("Personnel not found. Please try again.\n");
-        return;
-    }
-
-    // If the personnel is not active, display an error message and return to the Manager Menu
-    if (personnelList[personnelIndex].active != 1) {
-        printf("Personnel is not active. Please try again.\n");
-        return;
-    }
-
-    // Assign the task to the personnel
-    taskList[taskIndex].assignID = personnelID;
-    printf("Task assigned successfully.\n");
-}
-
-void showPersonnelList() {
-    printf("\n---------------------\n");
-    printf(" Active Personnel List\n");
-    printf("---------------------\n");
-
-    // Display the header for the personnel list
-    printf("%-5s%-20s%-20s\n", "ID", "Username", "Access");
-
-    // Display each personnel record in the list
-    for (int i = 0; i < numPersonnel; i++) {
-        if (personnelList[i].active == 1) {
-            printf("%-5d%-20s%-20s\n", personnelList[i].personnelID, personnelList[i].username,
-                   personnelList[i].access == 1 ? "Admin" : "Manager");
-        }
-    }
-}
-int findTaskIndex(int taskID) {
-    for (int i = 0; i < numTasks; i++) {
-        if (taskList[i].taskID == taskID) {
-            return i;
-        }
-    }
-    return -1; // if taskID not found
-}
-
-void updateTaskStatus() {
-    int taskID, index;
-    printf("\n---------------------\n");
-    printf("     Update Task\n");
-    printf("---------------------\n");
-
-    // Ask the user for the task ID to be updated
-    printf("Enter the Task ID to be updated: ");
-    scanf("%d", &taskID);
-
-    // Find the index of the task in the taskList array
-    index = findTaskIndex(taskID);
-
-    // If the task is not found, display an error message and return to the Manager Menu
-    if (index == -1) {
-        printf("\nTask not found. Please try again.\n");
-        return;
-    }
-
-    // Display the current task information
-    printf("\nCurrent Task Information:\n");
-    printf("Name: %s\n", taskList[index].name);
-    printf("Sequence: %d\n", taskList[index].sequence);
-    printf("Description: %s\n", taskList[index].description);
-    printf("Project ID: %d\n", taskList[index].projectID);
-    printf("Start Date: %s\n", taskList[index].startdate);
-    printf("End Date: %s\n", taskList[index].enddate);
-    printf("Total Duration: %.2f\n", taskList[index].totalDuration);
-    printf("Status: %d\n", taskList[index].status);
-    printf("Assigned Personnel ID: %d\n\n", taskList[index].assignID);
-
-    // Ask the user to confirm if they want to update the task
-    char confirm;
-    printf("Are you sure you want to update this task? (Y/N): ");
-    clearBuffer();
-    scanf("%c", &confirm);
-
-    if (confirm == 'Y' || confirm == 'y') {
-        // Update the task information
-        printf("\nEnter the new information for the task:\n");
-
-        printf("Name: ");
-        fgets(taskList[index].name, MAX_NAME_LEN, stdin);
-        taskList[index].name[strcspn(taskList[index].name, "\n")] = '\0';
-
-        printf("Sequence: ");
-        scanf("%d", &taskList[index].sequence);
-        clearBuffer();
-
-        printf("Description: ");
-        fgets(taskList[index].description, MAX_DESC_LEN, stdin);
-        taskList[index].description[strcspn(taskList[index].description, "\n")] = '\0';
-
-        printf("Project ID: ");
-        scanf("%d", &taskList[index].projectID);
-        clearBuffer();
-
-        printf("Start Date (MM/DD/YYYY): ");
-        fgets(taskList[index].startdate, MAX_DATE_LEN, stdin);
-        taskList[index].startdate[strcspn(taskList[index].startdate, "\n")] = '\0';
-
-        printf("End Date (MM/DD/YYYY): ");
-        fgets(taskList[index].enddate, MAX_DATE_LEN, stdin);
-        taskList[index].enddate[strcspn(taskList[index].enddate, "\n")] = '\0';
-
-        printf("Total Duration: ");
-        scanf("%f", &taskList[index].totalDuration);
-        clearBuffer();
-
-        printf("Status: ");
-        scanf("%d", &taskList[index].status);
-        clearBuffer();
-
-        printf("Assigned Personnel ID: ");
-        scanf("%d", &taskList[index].assignID);
-        clearBuffer();
-
-        printf("\nTask updated successfully.\n");
-    }
-}
-
-void addTask() {
-    Task newTask;
-    char confirm;
-
-    printf("\n---------------------\n");
-    printf("    Add New Task\n");
-    printf("---------------------\n");
-
-    // Generate a new task ID
-    newTask.taskID = numTasks + 1;
-
-    // Get the required task details from the user
-    printf("Name: ");
-    scanf("%s", newTask.name);
-    printf("Sequence: ");
-    scanf("%d", &newTask.sequence);
-    printf("Description: ");
-    scanf("%s", newTask.description);
-    printf("Project ID: ");
-    scanf("%d", &newTask.projectID);
-    printf("Start Date (MM/DD/YYYY): ");
-    scanf("%s", newTask.startdate);
-    printf("End Date (MM/DD/YYYY): ");
-    scanf("%s", newTask.enddate);
-    printf("Total Duration (in days): ");
-    scanf("%f", &newTask.totalDuration);
-    printf("Status (0: Not Started, 1: In Progress, 2: Completed): ");
-    scanf("%d", &newTask.status);
-    printf("Assigned Personnel ID: ");
-    scanf("%d", &newTask.assignID);
-
-    // Confirm the details with the user
-    printf("\nAre these details correct? (Y/N)\n");
-    printf("Task ID: %d\n", newTask.taskID);
-    printf("Name: %s\n", newTask.name);
-    printf("Sequence: %d\n", newTask.sequence);
-    printf("Description: %s\n", newTask.description);
-    printf("Project ID: %d\n", newTask.projectID);
-    printf("Start Date: %s\n", newTask.startdate);
-    printf("End Date: %s\n", newTask.enddate);
-    printf("Total Duration: %.2f\n", newTask.totalDuration);
-    printf("Status: %d\n", newTask.status);
-    printf("Assigned Personnel ID: %d\n", newTask.assignID);
-    scanf(" %c", &confirm);
-
-    // Add the new task to the taskList if the user confirms
-    if (confirm == 'Y' || confirm == 'y') {
-    	taskList[numTasks] = newTask;
-    FILE *fp = fopen("task.txt", "a");
-    
-    fprintf(fp, "%d,%d,%s,%d,%s,%s,%d,%d,%d\n", numTasks + 1, taskList[numTasks].sequence, taskList[numTasks].description, taskList[numTasks].projectID,taskList[numTasks].startdate,
-           taskList[numTasks].enddate,taskList[numTasks].totalDuration,taskList[numTasks].status, taskList[numTasks].assignID);
-    numTasks++;
-    fclose(fp);
-        
-        
-        printf("\nTask added successfully.\n");
-    } else {
-        printf("\nTask not added.\n");
-    }
-}
-
-void addProject() {
-    Project newProject;
-    char confirm;
-    printf("\n---------------------\n");
-    printf("    Add New Project\n");
-    printf("---------------------\n");
-
-    // Generate a new project ID
-    newProject.projectID = numProjects + 1;
-
-    // Prompt the manager to enter the details of the new project
-    printf("Enter the name of the project: ");
-    scanf("%s", newProject.name);
-    printf("Enter the description of the project: ");
-    scanf("%s", newProject.description);
-    printf("Enter the personnel ID to assign the project: ");
-    scanf("%d", &newProject.assignID);
-
-    // Set the status and completion fields to default values
-    newProject.status = 0;
-    newProject.completion = 0.0;
-
-    // Ask for confirmation before adding the new project
-    printf("\nAre you sure you want to add the following project?\n");
-    printf("Name: %s\n", newProject.name);
-    printf("Description: %s\n", newProject.description);
-    printf("Assigned Personnel ID: %d\n", newProject.assignID);
-    printf("Status: %d\n", newProject.status);
-    printf("Completion: %.2f\n", newProject.completion);
-    printf("Enter Y to confirm, any other key to cancel: ");
-    scanf(" %c", &confirm);
-
-    // Add the new project to the project list if confirmed
-    if (confirm == 'Y' || confirm == 'y') {
-        projectList[numProjects] = newProject;
-        
-        
-        FILE *fp = fopen("proj.txt", "a");
-    fprintf(fp, "%d,%s,%d,%d,%s\n", projectList[numProjects].projectID, projectList[numProjects].name, 1, 2, projectList[numProjects].description);
-    numProjects++;
-        fclose(fp);
-        printf("\nProject added successfully.\n");
-        
-        
-    } else {
-        printf("\nOperation canceled.\n");
-    }
-}
-
-// Implement the functions for Personnel management
-void addPersonnel() {
-Personnel newPersonnel;
-char confirm;
-printf("\n---------------------\n");
-printf("   Add New Personnel\n");
-printf("---------------------\n");
-
-// Generate a new personnel ID
-newPersonnel.personnelID = numPersonnel + 1;
-
-// Get the new personnel information from the administrator
-printf("Username: ");
-scanf("%s", newPersonnel.username);
-
-printf("Temporary Password: ");
-scanf("%s", newPersonnel.password);
-
-newPersonnel.access = 2; // Set the access value to 2 (Manager)
-
-newPersonnel.active = 1; // Set the active status to 1 (Active)
-
-printf("\nConfirm to add new personnel? (Y/N): ");
-scanf(" %c", &confirm);
-
-if (confirm == 'Y' || confirm == 'y') {
-	FILE *fp = fopen("personel.txt", "a"); //changed "w" to "a"
-    personnelList[numPersonnel] = newPersonnel;
-    fprintf(fp, "%d,%s,%s,%d,%d\n", numPersonnel + 1, personnelList[numPersonnel].username,
-           personnelList[numPersonnel].password, 1, 2);
-    numPersonnel++;
-    fclose(fp);
-    printf("New personnel added successfully.\n");
-} else {
-    printf("New personnel not added.\n");
-}
-}
-void updatePersonnel() {
-int personnelID;
-printf("\n---------------------\n");
-printf(" Update Personnel\n");
-printf("---------------------\n");
-// Ask for the personnel ID to update
-printf("Enter the Personnel ID to update: ");
-scanf("%d", &personnelID);
-
-
-printf("Personnel record updated successfully.\n");
-}
-void deletePersonnel() {
-    int personnelID, index;
-    char confirm;
-
-    printf("\n---------------------\n");
-    printf("     Delete User\n");
-    printf("---------------------\n");
-
-    // Ask for the personnelID of the user to be deleted
-    printf("Personnel ID: ");
-    scanf("%d", &personnelID);
+#include <stdbool.h>
+
+typedef char str10[10]; 
+typedef char str20[20];
+typedef char str15[15];
+typedef char str30[30];
+
+struct userTag {
+		int userID;
+		str10 password;
+		str20 name;
+		str30 address;
+		int contact;          
+	};
+
+typedef struct userTag userTag;
 	
-    // Find the index of the user with the provided personnelID
-//    index = findPersonnelIndex(personnelID);
+struct itemTag {
+	int productID;
+	str20 itemName;
+	str15 category;
+	str30 description;
+	int quantity;
+	int price;  
+	int sellerID;        
+};
 
-    if (index == -1) {
-        printf("Personnel with ID %d not found.\n", personnelID);
-    }
-    else {
-        // Confirm the deletion with the administrator
-        printf("Are you sure you want to delete the account of %s? (Y/N) ", personnelList[index].username);
-//        clearBuffer(); // clear input buffer before using fgets
-        fgets(&confirm, sizeof(confirm), stdin);
-		getchar();
-        if (confirm == 'Y' || confirm == 'y') {
-            // If the user account is attached to a record (Task or Project), assign it to the Administrator account
-            for (int i = 0; i < numTasks; i++) {
-                if (taskList[i].assignID == personnelID) {
-                    taskList[i].assignID = personnelList[0].personnelID; // assign to Administrator account
-                }
-            }
-            for (int i = 0; i < numProjects; i++) {
-                if (projectList[i].assignID == personnelID) {
-                    projectList[i].assignID = personnelList[0].personnelID; // assign to Administrator account
-                }
-            }
+#define MAX_CART_SIZE 100
 
-            // Shift the remaining personnel records to fill the gap
-            for (int i = index; i < numPersonnel-1; i++) {
-                personnelList[i] = personnelList[i+1];
-            }
-            numPersonnel--;
+struct itemTag cart[MAX_CART_SIZE];
 
-            printf("Account of %s has been deleted.\n", personnelList[index].username);
-        }
-        else {
-            printf("Account deletion canceled.\n");
-        }
-    }
+typedef struct itemTag itemTag;
+struct transactionTag {
+	str10 date;
+	itemTag setItem[4];
+	int buyerID;
+	int tranSellerID;
+	int total;     
+};
+
+typedef struct transactionTag transactionTag;
+
+/*
+	Purpose: display the welcome banner
+*/
+	void intro(){
+	printf("\n");
+	printf("_________________________________\n\n");
+	printf("|   WELCOME TO SHOPPING APP     |\n");
+	printf("_________________________________\n\n");
+	}
+
+/*
+	Purpose: display the main menu
+*/
+	void mainMenu(){
+	printf("\t     MAIN MENU\n\n");
+	printf("     1 - Register as a User\n     2 - User Menu\n     3 - Admin Menu\n     4 - Exit\n\n");
+	}
+
+/*
+	Purpose: append user text file to add the newly registered user
+	@param : nMenu the condition of the selected menu
+	@param : users is the structure that will contain the data of the users
+	@param : ft is the flag when appending a new user
+	@param : *fpUser is the User and file name that will be read, appended, and closed once nMenu is set to terminate
+	@param : *fpItem is the Item and file name that will be read and closed once nMenu is set to terminate
+	Pre-condition: the parameter is a valid structure, string, file pointer, and integer.
+*/
+	void writeTxt(int nMenu, userTag users, int ft, FILE *fpUser , FILE *fpItem){
+	
+	if (ft == 1){
+		fclose(fpUser);
+		fpUser = fopen("Users.txt", "a");
+		fprintf(fpUser, "%d %s \n%s\n%s\n%d\n\n", users.userID, users.password, users.name, users.address, users.contact);
+		ft = 0;
+	} 	
+		
+		if (nMenu == 4){
+			fclose(fpUser);
+			fclose(fpItem);
+		}
+	}
+	
+/*
+	Purpose: checks if the userID already exists in the users data
+	Returns: either the (a) userID is invalid and will return a negative boolean value or
+	         (b) the userID is valid and will return a positive boolean value
+	@param : tempUserID is the integer that stores the desired userID to be added if valid
+	@param : users is the structure array that will contain the data of the users
+	@param : userCnt monitors the count of users added in the array
+	Pre-condition: the parameter is a valid structure array and integer.
+*/
+	int checkUserID(int tempUserID, userTag users[], int userCnt){
+		int nDup = 0;
+		
+		for (int i = 0; i < 99; i++){
+			if (tempUserID == users[i].userID)
+			nDup++;
+			}
+			
+			
+			if (nDup){
+			printf("\n\tuserID already registered...\n\n");
+				return 1;
+			}
+			else
+			users[userCnt].userID = tempUserID;
+				return 0;
+	}
+
+/*
+	Purpose: checks if the userID is registered in the users data and if it does it will then check if the given password matches
+	Returns: either the (a) userID is not registered and will return a negative boolean value or
+	         (b) will return a positive boolean value when the userID is registered and password matches
+	@param : users is the structure array that will contain the data of the users
+	@param : tempUserID is the string that holds the userID that is given by the user.
+	@param : tempPass is the string that holds the password that is given by the user.
+	Pre-condition: the parameter is a valid structure array and string.
+*/
+	int logIn(userTag users[],int tempUserID, str10 tempPass){
+		int nCon = 0;;
+		
+		for (int i = 0; i < 99; i++){
+			if (tempUserID == users[i].userID)
+					if (!(strcmp(tempPass, users[i].password)))
+					nCon = 1;
+			}
+			
+		return nCon;
+	}
+
+/*
+	Purpose: collects information to be added in the user array
+	@param : nMenu the condition of the selected menu
+	@param : users is the structure array that will contain the data of the users
+	@param : userCnt monitors the count of users added in the array
+	@param : *fpUser is the User and file name that will be essential when calling the writeTxt function
+	@param : *fpItem is the Item and file name that will be essential when calling the writeTxt function
+	Pre-condition: the parameters contain valid values
+*/	
+	void regUser(int *nMenu, userTag users[], int *userCnt, FILE *fpUser , FILE *fpItem){
+		*nMenu = 0;
+		int tempUserID, ft = 1;
+		
+
+		printf("\n\n\t     REGISTER USER MENU\n\n");
+		
+		do {
+			printf("Enter your userID: ");
+			scanf("%d", &tempUserID);
+		}while(checkUserID(tempUserID, users, *userCnt));
+
+		printf("Enter your password: ");
+		scanf("%s", users[*userCnt].password);
+		printf("Enter your name: ");
+		scanf("%s", users[*userCnt].name);
+		printf("Enter your address: ");
+		scanf("%s", users[*userCnt].address);
+		printf("Enter your contact: ");
+		scanf("%d", &users[*userCnt].contact);
+		
+		fpUser = fopen("Users.txt", "a");
+		fprintf(fpUser, "%d %s \n%s\n%s\n%d\n\n", tempUserID, users[*userCnt].password, users[*userCnt].name, users[*userCnt].address, users[*userCnt].contact);
+		fclose(fpUser);
+		printf("\n\tRedirecting back to Main Menu...\n\n");
+	}
+
+/*
+	Purpose: checks if the productID is registered in the items data
+	Returns: either the (a) productID is not found and will return a negative boolean value or
+	         (b) the productID is registered and will return a positive boolean value
+	@param : tempProductID is the string that holds the productID that is given by the user.
+	@param : *fpItem is the Item and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/	
+	int checkProductID(int tempProductID,  FILE *fpItem){
+		itemTag tempItem;
+		int nFlag = 0;
+		
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7) 
+		{
+			if(tempProductID == tempItem.productID)
+				nFlag = 1;	
+		}
+			if (nFlag)
+				printf("\n\tproductID already registered...\n\n");
+			
+			return nFlag;
+	}
+
+/*
+	Purpose: collects information to be added in the item array
+	@param : items is the structure array that will contain the data of the items
+	@param : *fpItem is the Item and file name that will be appended
+	@param : sellerID stores the sellerID for the item
+	@param : *itemCnt monitors the count of users added in the array
+	Pre-condition: the parameters contain valid values
+*/		
+	void newItem(itemTag items[], FILE *fpItem, int sellerID, int *itemCnt){
+		int tempProductID;
+		
+		printf("\n\n\t     ADD NEW ITEM\n\n");
+		do {
+			printf("Enter the ProductID: ");
+			scanf("%d", &tempProductID);
+		} while(checkProductID(tempProductID, fpItem));
+
+		items[*itemCnt].productID = tempProductID;
+		printf("Enter the Item Name: ");
+		scanf(" %s", items[*itemCnt].itemName);
+		printf("Enter the Item Category: ");
+		scanf("%s", items[*itemCnt].category);
+		printf("Enter Item Description: ");
+		scanf("%s", items[*itemCnt].description);
+		printf("Enter Item Quantity: ");
+		scanf("%d", &items[*itemCnt].quantity);
+		printf("Enter Item Price: ");
+		scanf("%d", &items[*itemCnt].price);
+
+
+		FILE *fp;
+	
+	   fp = fopen("Item.txt", "a");
+	
+	   fprintf(fp, "%d %s %s %s %d %d\n" , tempProductID, items[*itemCnt].itemName,items[*itemCnt].category,items[*itemCnt].description,items[*itemCnt].quantity,items[*itemCnt].price); // write values to the file
+	
+	   fclose(fp);
+		
+		*itemCnt = *itemCnt + 1;
+		printf("\n\tRedirecting back to Main Menu...\n\n");
+	}
+
+/*
+	Purpose: displays the products of the seller
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : sellerID stores the sellerID for the item
+	Pre-condition: the parameters contain valid values
+*/
+	void myProducts(itemTag items[], int sellerID, int max){
+		
+		printf("\n\n\t\t\t\t\t     MY PRODUCTS\n\n");
+		printf("  Product ID  ||      Item Name      ||  Item Category  ||  Unit Price  || Unit Quantity\n\n");
+		
+			for (int i = 0; i < max; i++)
+			printf("%14d  %21s  %17s  %14d  %14d\n",  items[i].productID, items[i].itemName, items[i].category, items[i].price, items[i].quantity);
+	}
+
+void editItem(itemTag items[], FILE *fpItem, int sellerID, int *itemCnt){
+    
 }
 
-int findPersonnelIndex(int personnelID) {
-    for (int i = 0; i < numPersonnel; i++) {
-        if (personnelList[i].personnelID == personnelID) {
-            return i;
-        }
-    }
-    return -1; // Personnel not found
+/*
+	Purpose: checks if the productID exists in the items array
+	Returns: either the (a) productID is not registered and will return a negative boolean value or
+	         (b) will return a positive boolean value when the productID is found
+	@param : items contains the item structure array
+	@param : tempProdID contains the productID that is given by the user
+	Pre-condition: the parameters contain valid values
+*/	
+	int checkProductIDarray(itemTag items[], int tempProdID, int *index){
+		int nFlag;
+
+		
+		for(int i = 0; i < 20; i++){
+			if(tempProdID == items[i].productID){
+				nFlag = 1;
+				*index = i;
+				}
+		}
+		
+		if(!(nFlag))
+			printf("\n\tINVALID PRODUCTID\n\tRedirecting back to Main Menu...\n\n");
+		
+		return nFlag;
+	}
+
+/*
+	Purpose: menu that decides if the given productID will proceed to editMenu() or not
+	@param : items contains the item structure array
+	@param : *fpItem is the Item and file name that will be essential when calling the checkProductIDarray()
+	@param : sellerID stores the sellerID for the item
+	Pre-condition: the parameters contain valid values
+*/		
+	void editStock(itemTag items[], FILE *fpItem, int sellerID, int *max){
+		int tempProdID, nCon = 0, index;
+		int productID;
+		printf("\n\n\t     EDIT STOCK\n\n");
+		printf("\n\n\t     MY PRODUCTS\n\n");
+		
+		myProducts(items, sellerID, *max);
+		
+		printf("Enter ProductID: ");
+		scanf("%d", &tempProdID);
+		
+		nCon = checkProductIDarray(items, tempProdID, &index);
+		printf("\nnCon%d\n", index);
+		int nOpt;
+		
+                                             
+
+			
+			
+			do{
+				printf("\n\n\t     EDIT MENU\n\n");	
+				printf("\n\n     1 - Replenish\n     2 - Change Price\n     3 - Change Item Name\n     4 - Change Category\n     5 - Change Description\n     6 - Finish Editing\n\n");
+				printf("Select Option: ");
+				scanf("%d", &nOpt);
+			
+				switch(nOpt){
+				case 1: {
+						printf("\n\n\t     Replenish\n\n");
+						int addqty;
+					    for (int i = 0; i < *max; i++) {
+					        if (items[i].productID == tempProdID) {
+					            index = i;             
+					            break;
+					        }
+					        if (i == (*max - 1)) {
+					            printf("Item not found.\n");
+					            return;
+					        }
+					    }
+					    printf("Enter the new Item Quantity: ");
+    					scanf("%d", &items[index].quantity);
+					    printf("\n\tItem with ProductID %d has been updated.\n\n", productID + 1);
+					    
+				}break;
+				case 2: {
+						printf("\n\n\t     Change Price\n\n");
+						int addqty;
+					    for (int i = 0; i < *max; i++) {
+					        if (items[i].productID == tempProdID) {
+					            index = i;             
+					            break;
+					        }
+					        if (i == (*max - 1)) {
+					            printf("Item not found.\n");
+					            return;
+					        }
+					    }
+					    printf("Enter the new Item Price: ");
+    					scanf("%d", &items[index].price);
+					    printf("\n\tItem with ProductID %d has been updated.\n\n", productID + 1);
+					    
+				}break;
+				case 3: {
+						printf("\n\n\t     Change Item Name\n\n");
+						int addqty;
+					    for (int i = 0; i < *max; i++) {
+					        if (items[i].productID == tempProdID) {
+					            index = i;             
+					            break;
+					        }
+					        if (i == (*max - 1)) {
+					            printf("Item not found.\n");
+					            return;
+					        }
+					    }
+					    printf("Enter the new Item Name: ");
+    					scanf("%s", items[index].itemName);
+					    printf("\n\tItem with ProductID %d has been updated.\n\n", productID + 1);
+					    
+				}break;
+				case 4: {
+						printf("\n\n\t     Change Category\n\n");
+						int addqty;
+					    for (int i = 0; i < *max; i++) {
+					        if (items[i].productID == tempProdID) {
+					            index = i;             
+					            break;
+					        }
+					        if (i == (*max - 1)) {
+					            printf("Item not found.\n");
+					            return;
+					        }
+					    }
+					    printf("Enter the new Item Category: ");
+    					scanf("%s", items[index].category);
+					    printf("\n\tItem with ProductID %d has been updated.\n\n", productID + 1);
+					    
+				}break;
+				case 5: {
+						printf("\n\n\t     Change Description\n\n");
+						int addqty;
+					    for (int i = 0; i < *max; i++) {
+					        if (items[i].productID == tempProdID) {
+					            index = i;             
+					            break;
+					        }
+					        if (i == (*max - 1)) {
+					            printf("Item not found.\n");
+					            return;
+					        }
+					    }
+					    printf("Enter the new Item Description: ");
+    					scanf("%s", items[index].description);
+					    printf("\n\tItem with ProductID %d has been updated.\n\n", productID + 1);
+					    
+				}break;
+				
+			}
+				printf("\n\n%d\n\n", items->quantity);
+			}while(nOpt != 6);
+		               
+ 		               
+		    
+			
+	}
+	                                             
+	void printItems(FILE *fpItem, int max, itemTag items[],int sellerID){
+	     
+		fclose(fpItem);                                             
+		fpItem = fopen("Items.txt", "w");
+
+		for (int i = 0; i < max; i++)
+		fprintf(fpItem, "%d %d\n%s\n%s\n%s\n%d %d\n\n", items[i].productID, sellerID, items[i].itemName, items[i].category, items[i].description, items[i].quantity, items[i].price);
 }
+	
+/*
+	Purpose: displays the low stock products of the seller
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : sellerID stores the sellerID for the item
+	Pre-condition: the parameters contain valid values
+*/	
+	void lowStock(FILE *fpItem, itemTag items[], int sellerID, int max){
+		itemTag tempItem;
+		char cCon = 'N';
+		
+		printItems(fpItem, max, items, sellerID);
 
-void archivePersonnel() {
-    int personnelID;
-    int personnelIndex;
-    char confirm;
+		printf("\n\n\t     LOW STOCK\n\n");
+		
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+		if(sellerID == tempItem.sellerID)
+		if(tempItem.quantity < 5 && cCon == 'N'){
+		printf("Product ID: %d\t Item Name: %s\t  Item Category: %s\t Unit Price: %d\t Unit Quantity: %d\n",  tempItem.productID, tempItem.itemName, tempItem.category, tempItem.price, tempItem.quantity);
+		printf("\n\nPress N to see next product \nPress X to exit: ");
+		scanf(" %c", &cCon);
+		}
 
-    printf("\n---------------------\n");
-    printf("    Archive Personnel\n");
-    printf("---------------------\n");
+	}
+	
+/*
+	Purpose: scans the items text file
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : items is the structure array that stores all items
+	@param : sellerID stores the sellerID for the item
+	@param : *itemCnt monitors the count of users added in the array
+	Pre-condition: the parameters contain valid values
+*/		
+	void scanItems( FILE *fpItem, itemTag items[],int sellerID, int *itemCnt){
+		itemTag tempItem;
+		
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7){
+			if(sellerID == tempItem.sellerID){
+				items[*itemCnt].productID =  tempItem.productID;
+				items[*itemCnt].sellerID = tempItem.sellerID;
+				strcpy(items[*itemCnt].itemName, tempItem.itemName);
+				strcpy(items[*itemCnt].category, tempItem.category);
+				strcpy(items[*itemCnt].description, tempItem.description);
+				items[*itemCnt].quantity =  tempItem.quantity;
+				items[*itemCnt].price = tempItem.price;
+				*itemCnt = *itemCnt + 1;
+			}
+		}
+	}
 
-    // Ask for the personnel ID to archive
-    printf("Enter the Personnel ID to archive: ");
-    scanf("%d", &personnelID);
 
-    // Find the index of the personnel record with the provided ID
-    personnelIndex = findPersonnelIndex(personnelID);
+/*
+	Purpose: displays the sell menu
+	@param : *nMenu the condition of the selected menu
+	@param : sellerID stores the sellerID for the item
+	@param : transactions[] contains all the transaction data
+	@param : *fpUser is the User and file name that will be essential when calling functions
+	@param : *fpItem is the Item and file name that will be essential when calling functions
+	Pre-condition: the parameters contain valid values
+*/	
+	void sellMenu(int *nMenu, int sellerID, transactionTag transactions[], FILE *fpUser , FILE *fpItem){
+		int itemCnt= 0;
+		itemTag items[19];
+		int nOpt;
 
-    if (personnelIndex == -1) {
-        printf("Personnel with ID %d not found.\n", personnelID);
-    } else {
-        Personnel personnel = personnelList[personnelIndex];
+		*nMenu = 0;
+		scanItems( fpItem, items, sellerID, &itemCnt);
+		
+		do{
+			printf("\n\n\t     SELL MENU\n\n");	
+			printf("\n\n     1 - Add New Item\n     2 - Edit Stock\n     3 - Show My Products\n     4 - Show My Low Stock Products\n     5 - Exit Sell Menu\n\n");
+			printf("Select Option: ");
+			scanf("%d", &nOpt);
+			
+			switch(nOpt){
+				case 1: newItem(items, fpItem, sellerID, &itemCnt); break;
+				case 2: editStock(items, fpItem, sellerID, &itemCnt); break;
+				case 3: myProducts(items, sellerID, itemCnt); break;
+				case 4: lowStock(fpItem, items, sellerID, itemCnt); break;
+				case 5: printItems(fpItem,itemCnt, items, sellerID); printf ("\n"); break;
+				default: printf("\nINVALID INPUT\n\n"); break;
+			}
+		}while(nOpt != 5);	
 
-        // Ask for confirmation before archiving the personnel
-        printf("Are you sure you want to archive Personnel %d (Y/N)? ", personnelID);
-//        clearBuffer();
-        scanf("%c", &confirm);
+	}
 
-        if (confirm == 'Y' || confirm == 'y') {
-            // Mark the personnel as archived by setting the active status to 2
-            personnel.active = 2;
-            personnelList[personnelIndex] = personnel;
-            printf("Personnel %d has been archived.\n", personnelID);
-        } else {
-            printf("Personnel %d has not been archived.\n", personnelID);
-        }
-    }
-}
+/*
+	Purpose: display all products
+	@param : *fpItem is the Item and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/		
+	void allProducts(FILE *fpItem){
+		itemTag tempItem;
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		printf("\n\n\t\t\t     SHOW PRODUCTS\n\n");
+		
+		printf("  Product ID  ||      Item Name      ||  Item Category  ||  Unit Price  || Unit Quantity\n\n");
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+			printf("%14d  %22s  %17s  %14d  %14d\n",  tempItem.productID, tempItem.itemName, tempItem.category, tempItem.price, tempItem.quantity);
+	}
 
-void assignProject() {
-    printf("\n---------------------\n");
-    printf("   Assign Project\n");
-    printf("---------------------\n");
+/*
+	Purpose: display all products by a specific seller
+	@param : *fpItem is the Item and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/			
+	void specificSeller(FILE *fpItem){
+		itemTag tempItem;
+		int tempSeller;
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		printf("Enter Specific Seller: ");
+		scanf("%d", &tempSeller);
+		
+		printf("\n\n\t     %d PRODUCTS\n\n", tempSeller);
+		
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+			if(tempSeller == tempItem.sellerID)
+				printf("Product ID: %d\t Item Name: %s\t  Item Category: %s\t Unit Price: %d\t Unit Quantity: %d\n",  tempItem.productID, tempItem.itemName, tempItem.category, tempItem.price, tempItem.quantity);
+	}
 
-    // Display all the active projects
-    printf("Active Projects:\n");
-    for (int i = 0; i < numProjects; i++) {
-        if (projectList[i].status == 1) {
-            printf("%d: %s\n", projectList[i].projectID, projectList[i].name);
-        }
-    }
+/*
+	Purpose: display all products by a specific category
+	@param : *fpItem is the Item and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/		
+	void specificCategory(FILE *fpItem){
+		itemTag tempItem;
+		str15 tempCat;
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		printf("Enter Specific Seller: ");
+		scanf("%s", tempCat);
+		
+		printf("\n\n\t     %s PRODUCTS\n\n", tempCat);
+		
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+			if(!(strcmp(tempCat, tempItem.category)))
+				printf("Product ID: %d\t Item Name: %s\t  Item Category: %s\t Unit Price: %d\t Unit Quantity: %d\n",  tempItem.productID, tempItem.itemName, tempItem.category, tempItem.price, tempItem.quantity);
+	}
 
-    // Display all the active personnel with user access of 2 (Manager)
-    printf("\nActive Managers:\n");
-    for (int i = 0; i < numPersonnel; i++) {
-        if (personnelList[i].active == 1 && personnelList[i].access == 2) {
-            printf("%d: %s\n", personnelList[i].personnelID, personnelList[i].username);
-        }
-    }
+/*
+	Purpose: display all products by a specific name
+	@param : *fpItem is the Item and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/	
+	void specificName(FILE *fpItem){
+		itemTag tempItem;
+		str20 tempName;
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+		
+		printf("Enter Specific Name: ");
+		scanf("%s", tempName);
+		
+		printf("\n\n\t     %s PRODUCT\n\n", tempName);
+		
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+			if(!(strcmp(tempName, tempItem.itemName)))
+				printf("Product ID: %d\t Item Name: %s\t  Item Category: %s\t Unit Price: %d\t Unit Quantity: %d\n",  tempItem.productID, tempItem.itemName, tempItem.category, tempItem.price, tempItem.quantity);
+	}
 
-    int projectID, personnelID;
-    printf("\nEnter the project ID: ");
-    scanf("%d", &projectID);
-    printf("Enter the personnel ID: ");
-    scanf("%d", &personnelID);
+/*
+	Purpose: add items to cart[]
+	@param : itemArray[] contains all stored items
+	@param : cart[] is the structure array that contains items
+	@param : max is the count of items stored in the array to avoid garbage values
+	@param : *cartCtr monitors the count of items added in the cart
+	Pre-condition: the parameters contain valid values
+*/	
 
-}
-void clearBuffer() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-    }
+
+
+/*
+	Purpose: checks if the given sellerID is stored in the cart[] and removes it from the array
+	@param : cart[] is the structure array that contains items
+	@param : max is the count of items stored in the array to avoid garbage values
+	@param : tempSellerID contains the productID that is given by the user
+	@param : *index stores the index
+	Pre-condition: the parameters contain valid values
+*/	
+	void checkCart(itemTag cart[],int *max, int tempSellerID){
+		itemTag tempCart[*max];
+		int l = 0, newMax;
+		newMax = *max;
+		newMax--;
+		
+		for(int i = 0; i < *max; i++){
+			if (cart[i].sellerID == tempSellerID){
+				i++;
+				newMax--;
+			}
+			else{
+				tempCart[l].productID = cart[i].productID;
+				strcpy(tempCart[l].itemName, cart[i].itemName);
+				strcpy(tempCart[l].category, cart[i].category);
+				strcpy(tempCart[l].description, cart[i].description);
+				tempCart[l].quantity = cart[i].quantity;
+				tempCart[l].price = cart[i].price;
+				tempCart[l].sellerID = cart[i].sellerID;
+				l++;
+			}
+		}
+			
+			for(int i = 0; i < newMax; i++){
+				cart[i].productID = tempCart[i].productID;
+				strcpy(cart[i].itemName, tempCart[i].itemName);
+				strcpy(cart[i].category, tempCart[i].category);
+				strcpy(cart[i].description, tempCart[i].description);
+				cart[i].quantity = tempCart[i].quantity;
+				cart[i].price = tempCart[i].price;
+				cart[i].sellerID = tempCart[i].sellerID;
+			}
+			
+			*max = newMax;
+	}
+
+	void removeProductID(itemTag cart[],int *max, int tempProductID){
+		itemTag tempCart[*max];
+		int l = 0, newMax;
+		newMax = *max;
+		newMax--;
+		
+		for(int i = 0; i < *max; i++){
+			printf("%d productID %d temp prodID", cart[i].productID, tempProductID);
+				if (cart[i].productID == tempProductID){
+					i++;
+					newMax--;
+				}
+				else{
+					tempCart[l].productID = cart[i].productID;
+					strcpy(tempCart[l].itemName, cart[i].itemName);
+					strcpy(tempCart[l].category, cart[i].category);
+					strcpy(tempCart[l].description, cart[i].description);
+					tempCart[l].quantity = cart[i].quantity;
+					tempCart[l].price = cart[i].price;
+					tempCart[l].sellerID = cart[i].sellerID;
+					l++;
+				}
+		}
+			
+			for(int i = 0; i < newMax; i++){
+				cart[i].productID = tempCart[i].productID;
+				strcpy(cart[i].itemName, tempCart[i].itemName);
+				strcpy(cart[i].category, tempCart[i].category);
+				strcpy(cart[i].description, tempCart[i].description);
+				cart[i].quantity = tempCart[i].quantity;
+				cart[i].price = tempCart[i].price;
+				cart[i].sellerID = tempCart[i].sellerID;
+			}
+			
+			*max = newMax;
+	}
+
+/*
+	Purpose: displays the edit cart menu and manages the cart
+	@param : cart[] is the structure array that contains items
+	@param : max is the count of items stored in the array to avoid garbage values
+	Pre-condition: the parameters contain valid values
+*/		
+	void editCart(itemTag cart[], int *max){
+		int tempProductID, tempSellerID, nOpt, nQuan;
+		
+		do{
+			printf("\n\n\t     EDIT CART MENU\n\n");	
+			printf("\n\n     1 - Remove All Items from Seller\n     2 - Remove Specific Item\n     3 - Edit Quantity\n     4 - Finish Edit Cart\n\n");
+			printf("Select Option: ");
+			scanf("%d", &nOpt);
+			
+			switch(nOpt){
+				case 1: { 	printf("Enter SellerID: ");
+							scanf("%d", &tempSellerID);
+							checkCart(cart, max, tempSellerID);
+							printf("\nCart is updated\n");
+						}; break;
+				case 2: { 	printf("Enter ProductID: ");
+							scanf("%d", &tempProductID);
+							removeProductID(cart, max, tempSellerID);
+							printf("\nCart is updated\n");
+						}; break;break;
+				case 3: {	printf("Enter ProductID: ");
+							scanf("%d", &tempSellerID);
+							printf("Enter New Quantity: ");
+							scanf("%d", &nQuan);
+							
+							for(int i = 0; i < *max; i++)
+								if(tempSellerID == cart[i].productID)
+									cart[i].quantity = nQuan;
+						}; break;
+				case 4: printf ("\n"); break;
+				default: printf("\nINVALID INPUT\n\n"); break;
+			}
+		
+		}while(nOpt != 4);	
+	}
+	
+	void checkOutAll(itemTag cart[],int  max,transactionTag transaction[]){
+		
+	}
+	
+	void checkOutSeller(){
+	}
+	
+	void checkOutItem(){
+	}
+
+/*
+	Purpose: displays the check out menu and calls the function that the user requires
+	@param : cart[] is the structure array that contains items
+	@param : max is the count of items stored in the array to avoid garbage values
+	Pre-condition: the parameters contain valid values
+*/		
+	void checkOutMenu(itemTag cart[], int max){
+		transactionTag transaction[19];
+		str10 tempDate;
+		int nOpt;
+		
+		printf("Enter tempDate: ");
+		scanf("%s", tempDate);
+		
+		do{
+			printf("\n\n\t     CHECK OUT MENU\n\n");	
+			printf("\n\n     1 - All\n     2 - By a Specific Seller\n     3 - Specific Item\n     4 - Exit Check Out\n\n");
+			printf("Select Option: ");
+			scanf("%d", &nOpt);
+			
+			switch(nOpt){
+				case 1: checkOutAll(cart, max, transaction); break;
+				case 2: checkOutSeller(); break;
+				case 3: checkOutItem(); break;
+				case 4: printf ("\n"); break;
+				default: printf("\nINVALID INPUT\n\n"); break;
+			}
+		}while(nOpt != 4);
+	}
+	
+/*
+	Purpose: scans all items in the Items.txt
+	@param : itemArray[] is the array that contains all items available to be bought
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : *ctr monitors the count of items added in the cart
+	Pre-condition: the parameters contain valid values
+*/	
+	void scanBuyItems(itemTag itemArray[],FILE *fpItem, int *ctr){
+		itemTag tempItem;
+		fclose(fpItem);
+		fpItem = fopen("Items.txt", "r");
+	
+		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7){
+			itemArray[*ctr].productID = tempItem.productID;
+			itemArray[*ctr].sellerID = tempItem.sellerID;
+			strcpy(itemArray[*ctr].itemName, tempItem.itemName);
+			strcpy(itemArray[*ctr].category, tempItem.category);
+			strcpy(itemArray[*ctr].description, tempItem.description);
+			itemArray[*ctr].quantity = tempItem.quantity;
+			itemArray[*ctr].price = tempItem.price;
+			*ctr = *ctr + 1;
+		}
+	}
+	
+/*
+	Purpose: rewrite the Cart.txt file
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : *fpCart is the cart and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/	
+	void updateCart(itemTag cart[], int max,  FILE *fpCart){
+		fclose(fpCart);
+		fpCart = fopen("Cart.txt", "w");
+		
+		for(int i = 0; i < max; i++)
+			fprintf(fpCart, "%d %s %s %s %d %d %d\n", cart[i].productID, cart[i].itemName, cart[i]. category, cart[i].description, cart[i].quantity, cart[i].price, cart[i].sellerID);
+	}
+
+/*
+	Purpose: displays the buy menu and calls the function that the user requires
+	@param : *fpItem is the Item and file name that will be scanned
+	@param : *fpCart is the cart and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/	
+
+	void buyMenu(int sales, itemTag items[],FILE *fpItem, FILE *fpCart,int *itemCnt){
+		int nOpt, ctr = 0, cartCtr = 0;
+		itemTag cart[9];
+		itemTag itemArray[20];
+		int ID;
+		
+		scanBuyItems(itemArray, fpItem, &ctr);
+		
+		do{
+			printf("\n\n\t     BUY MENU\n\n");	
+			printf("\n\n     1 - View All Products\n     2 - Show All Products by a Specific Seller\n     3 - Search Products by Category\n     4 - Show Products by Name\n     5 - Add to cart\n     6 - Edit Cart\n     7 - Check Out Menu\n     8 - Exit Buy Menu\n\n");
+			printf("Select Option: ");
+			scanf("%d", &nOpt);
+
+			int productID, quantity, index;
+					    bool found = false;
+			int option, sellerID, i, j;
+			switch(nOpt){
+				case 1: allProducts(fpItem); break;
+				case 2: specificSeller(fpItem); break;
+				case 3: specificCategory(fpItem); break;
+				case 4: specificName(fpItem); break;
+				case 5: 
+						
+					    
+					
+					    printf("\n\n\t     ADD TO CART\n\n");
+					    printf("Enter the ProductID of the item to add to cart: ");
+					    scanf("%d", &productID);
+					
+							int found = 0;
+						    char line[100];
+						    int quanti = 0;
+						    int prodID, qty, pri;
+							char desc[100],name[100],categ[100];
+						    
+						
+							FILE *fp;
+							   int value;
+							
+							   fp = fopen("Item.txt", "r"); 
+							
+							   if (fp == NULL) { 
+							      printf("Unable to open file\n");
+							      return 1;
+							   }
+							
+							   while (fscanf(fp, "%d %s %s %s %d %d", &prodID, name,categ,desc,&qty,&pri) != EOF) { 
+							      if(prodID == productID){
+						        	found = 1;
+						        	break;
+									}
+							   }
+							
+							   fclose(fp); 
+							if(found == 1){
+								printf("Enter quantity: ");
+								scanf("%d", &quanti);
+								
+								if(quanti <= 0 || quanti > qty){
+									printf("Invalid Quantity!");
+								}else{
+									FILE *fp;
+	
+								   fp = fopen("Cart.txt", "a"); 
+								   fprintf(fp, "%d %s %s %s %d %d\n" , prodID, &name,&categ,&desc,qty,pri); 
+									
+									sales = sales + (quanti * pri);
+								   fclose(fp); 
+								}
+								
+								
+							}else{
+								
+							}
+					    break; 
+				case 6:                        
+				
+				if(true){
+					FILE *fp;
+							   int value;
+							
+							   fp = fopen("Cart.txt", "r");
+							
+							   if (fp == NULL) { 
+							      printf("Unable to open file\n");
+							      return 1;
+							   }
+								printf("\n\n\t     CART ITEMS\n\n");
+								printf("PRODUCTID NAME CATEGORY DESCRIPTION QUANTITY PRICE\n");
+							   while (fscanf(fp, "%d %s %s %s %d %d\n", &prodID, name,categ,desc,&qty,&pri) != EOF) {
+							      printf("%d %s %s %s %d %d\n", prodID, &name,&categ,&desc,qty,pri);
+							   }
+							
+							   fclose(fp); 
+				}
+			    printf("\n\n\t     EDIT CART\n\n");
+			    printf("1. Remove all items from a specific seller.\n");
+			    printf("2. Remove a specific item from the cart.\n");
+			    printf("3. Finish editing cart.\n");
+			    printf("Enter your option: ");
+			    scanf("%d", &option);
+				
+			    switch(option) {
+			        case 1:
+			        	if(true){
+			        		FILE *file_pointer;
+			        		file_pointer = fopen("Cart.txt", "w");
+					    
+					    fclose(file_pointer);
+					    printf("All items remove!");
+						}
+					    
+			            break;
+			        case 2:
+			            
+			            if(true){
+						    int line_number = 0;
+						    printf("Enter the line you want to remove: ");
+							scanf("%d", &line_number);
+						    
+						    FILE *fp1 = fopen("Cart.txt", "r");
+						    if (fp1 == NULL) {
+						        printf("Failed to open file.\n");
+						        return 0;
+						    }
+						
+						    int num_lines = 0;
+						    char ch;
+						    while ((ch = fgetc(fp1)) != EOF) {
+						        if (ch == '\n') {
+						            num_lines++;
+						        }
+						    }
+						    if (line_number < 1 || line_number > num_lines) {
+						        printf("Invalid line number.\n");
+						        fclose(fp1);
+						        return 0;
+						    }
+						
+						    FILE *tmp = fopen("tmp.txt", "w");
+						    if (tmp == NULL) {
+						        printf("Failed to create temporary file.\n");
+						        fclose(fp1);
+						        return 0;
+						    }
+						
+						    rewind(fp1);
+						
+						    int current_line = 1;
+						    char buffer[1024];
+						    while (fgets(buffer, sizeof(buffer), fp1) != NULL) {
+						        if (current_line != line_number) {
+						            fputs(buffer, tmp);
+						        }
+						        current_line++;
+						    }
+						
+						    fclose(fp1);
+						    fclose(tmp);
+							
+						    if (remove("Cart.txt") != 0) {
+						        printf("Failed to delete original file.\n");
+						        return 0;
+						    }
+						    if (rename("tmp.txt", "Cart.txt") != 0) {
+						        printf("Failed to rename temporary file.\n");
+						        return 0;
+						    }
+						
+						    printf("Line %d removed successfully.\n", line_number);
+					
+						}
+			            break;
+			        case 3:
+			            printf("Exiting edit cart...\n");
+			            break;
+			    }
+				break;
+				case 7: printf("Checked out successfully.\n");
+						break;
+				case 8: printf ("\n"); break;
+				default: printf("\nINVALID INPUT\n\n"); break;
+			}
+		}while(nOpt != 8);
+	}
+/*
+	Purpose: displays the user menu and calls the function that the user requires
+	@param : sellerID stores the sellerID for the item
+	@param : transactions[] contains all the transaction data
+	@param : *fpUser is the User and file name that will be essential when calling functions
+	@param : *fpItem is the Item and file name that will be essential when calling functions
+	Pre-condition: the parameters contain valid values
+*/		
+	void userMenu(int sales,int *itemCnt,itemTag items[],int sellerID, transactionTag transactions[], FILE *fpUser , FILE *fpItem, FILE *fpCart){
+		int nMenu;
+		
+		do{	
+			printf("\n\n\t     USER MENU\n\n");
+			printf("\n\n     1 - Sell Menu\n     2 - Buy Menu\n     3 - Exit User Menu\n\n");
+			printf("Select Menu: ");
+			scanf("%d", &nMenu);
+			
+			switch(nMenu){
+				case 1: sellMenu(&nMenu, sellerID, transactions, fpUser, fpItem); break;
+				case 2: buyMenu(sales,items,fpItem, fpCart,itemCnt); break;
+				case 3: printf ("\n"); break;
+				default: printf("\nINVALID INPUT\n\n"); break;
+			}
+		}while(nMenu != 3);
+	}
+
+/*
+	Purpose: checks if the given login details are valid
+	@param : *nMenu the condition of the selected menu
+	@param : users is the structure array that will contain the data of the users
+	@param : transactions[] contains all the transaction data
+	@param : *fpUser is the User and file name that will be essential when calling functions
+	@param : *fpItem is the Item and file name that will be essential when calling functions
+	Pre-condition: the parameters contain valid values
+*/		
+	void logInUserMenu(int sales, itemTag items[],int *nMenu, userTag users[], transactionTag transactions[], FILE *fpUser , FILE *fpItem, FILE *fpCart){
+		int tempUserID;
+		str10 tempPass;
+		int itemCnt = 0;
+		printf("\nUserID:");
+		scanf("%d", &tempUserID);
+		printf("Password:");
+		scanf("%s", tempPass);
+
+		if (!(logIn(users, tempUserID ,tempPass))){
+			printf("\nInvalid UserID or Password\n");
+			printf("\n\tRedirecting back to Main Menu...\n\n");
+		}
+		else
+			userMenu(sales,&itemCnt,items,tempUserID,transactions, fpUser, fpItem, fpCart);
+	}
+
+/*
+	Purpose: checks if the password is valid for admin access
+	Returns: either the (a) password is invalid and will return a negative boolean value or
+	         (b) will return a positive boolean value when the password is valid
+*/	
+	int adminAccess(){
+		str10 tempPass;
+		int nCon = 0;
+		
+		printf("Admin Password: ");
+		scanf("%s", tempPass);
+		
+		if(!(strcmp(tempPass, "H3LLo?"))){
+			nCon = 1;
+		}else if(!(strcmp(tempPass, "admin2"))){
+			nCon = 1;
+		}else if(!(strcmp(tempPass, "admin3"))){
+			nCon = 1;
+		}
+		else
+			printf("\n\tUnauthorized Access Not Allowed\n\n");
+			
+		return nCon;
+			
+	}
+
+/*
+	Purpose: displays all users
+	@param : *fpUser is the User and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/	
+	void showAllUsers(FILE *fpUser){
+		userTag tempUser;
+		
+		fclose(fpUser);
+		fpUser = fopen("Users.txt", "r");
+		
+		printf("    User ID    ||     Password     ||       Name      ||        Address        ||   Phone Number\n\n");
+		while(fscanf(fpUser, "%d %s %s %s %d", &tempUser.userID, tempUser.password, tempUser.name, tempUser.address, &tempUser.contact) == 5)
+			printf("%15d  %18s  %17s  %23s  %15d\n", tempUser.userID, tempUser.password, tempUser.name, tempUser.address, tempUser.contact);
+		fclose(fpUser);
+	}
+	
+/*
+	Purpose: displays all sellers
+	@param : *fpItem is the User and file name that will be scanned
+	@param : *fpUser is the User and file name that will be scanned
+	Pre-condition: the parameters contain valid values
+*/		
+	void showAllSellers(FILE *fpItem, FILE *fpUser){
+//	struct tempSeller {
+//		int itemSale;  
+//		int ID;        
+//		};
+//		
+//		struct tempSeller tempSeller;
+//		itemTag tempItem;
+//		int itemCount;
+//		
+//		fclose(fpItem);
+//		fclose(fpUser);
+//		fpUser = fopen("Users.txt", "r");
+//		fpItem = fopen("Item.txt", "r");
+//		
+//		while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7)
+//			itemCount++;
+//		
+//		for(int i = 0; i < itemCount; i++){
+//			if(tempSeller.ID != tempItem.sellerID){
+//				tempSeller.ID = tempItem.sellerID;
+//				while(fscanf(fpItem, "%d %d %s %s %s %d %d", &tempItem.productID, &tempItem.sellerID, tempItem.itemName, tempItem.category, tempItem.description, &tempItem.quantity, &tempItem.price) == 7){
+//					if (tempSeller.ID == tempItem.sellerID)
+//					tempSeller.itemSale++;
+//				}
+//			}
+//		}
+		userTag tempUser;
+		
+		fclose(fpUser);
+		fpUser = fopen("Users.txt", "r");
+		
+		printf("    User ID    ||     Password     ||       Name      ||        Address        ||   Phone Number\n\n");
+		while(fscanf(fpUser, "%d %s %s %s %d", &tempUser.userID, tempUser.password, tempUser.name, tempUser.address, &tempUser.contact) == 5)
+			printf("%15d  %18s  %17s  %23s  %15d\n", tempUser.userID, tempUser.password, tempUser.name, tempUser.address, tempUser.contact);
+		fclose(fpUser);
+	}
+
+/*
+	Purpose: displays total sales
+
+	Pre-condition: the parameters contain valid values
+*/	
+	void showTotalSales(int sales){
+	printf("Total Sales: %d", sales);	
+	}
+
+/*
+	Purpose: displays sellers sales
+
+	Pre-condition: the parameters contain valid values
+*/	
+	void showSellers(int sales){
+		showTotalSales(sales);
+	}
+
+/*
+	Purpose:
+
+	Pre-condition: the parameters contain valid values
+*/	
+	void showShopaholics(){
+	printf("Shopaholics Func");
+	}
+
+/*
+	Purpose: displays the admin menu and calls the function that the user requires
+	@param : *nMenu the condition of the selected menu
+	@param : *fpUser is the User and file name that will be essential when calling functions
+	@param : *fpItem is the Item and file name that will be essential when calling functions
+	Pre-condition: the parameters contain valid values
+*/		
+	void adminMenu(int sales,int *nMenu, FILE *fpUser, FILE *fpItem){
+		int nOpt;
+		
+		*nMenu = 0;
+		
+		if (adminAccess()){
+			do{
+				printf("\n\n\t     ADMIN MENU\n\n");	
+				printf("\n\n     1 - Show All Users\n     2 - Show All Sellers\n     3 - Show Total Sales in Given Duration\n     4 - Show Sellers Sales\n     5 - Show Shopaholics\n     6 - Back to Main Menu\n\n");
+				printf("Select Option: ");
+				scanf("%d", &nOpt);
+				
+				switch(nOpt){
+					case 1: showAllUsers(fpUser); break;
+					case 2: showAllSellers(fpItem,fpUser); break;
+					case 3: showTotalSales(sales); break;
+					case 4: showSellers(fpItem); break;
+					case 5: showShopaholics(fpItem); break;
+					case 6: printf ("\n"); break;
+					default: printf("\nINVALID INPUT\n\n"); break;
+				}
+			}while(nOpt != 6);
+		}
+			
+	}
+
+/*
+	Purpose: close all opened file pointers
+	@param : *nMenu the condition of the selected menu
+	@param : *fpUser is the User and file name that will be essential when calling functions
+	@param : *fpItem is the Item and file name that will be essential when calling functions
+	@param : *fpCart is the Cart and file name that will be essential when calling functions
+	Pre-condition: the parameters contain valid values
+*/	
+	void nExit(int *nMenu, FILE *fpUser, FILE *fpItem,  FILE *fpCart){
+		fclose(fpUser);
+		fclose(fpItem);
+		fclose(fpCart);
+		*nMenu = 4;
+	}
+
+int main(){
+	int cartSize = 0;
+	int sales = 0;
+	int line_number = 1, count = 1;
+	userTag users[99];
+	itemTag items[99];
+	transactionTag transactions[10];
+	int nMenu, userCnt = 0;
+	FILE *fpUser, *fpItem, *fpCart;
+	fpUser = fopen("Users.txt", "w");
+	fpItem = fopen("Items.txt", "w");
+	
+	
+	intro();
+	
+	do{	
+		mainMenu();
+		
+		printf("Select Menu: ");
+		scanf("%d", &nMenu);	
+		
+		switch(nMenu){
+			case 1: regUser(&nMenu, users, &userCnt, fpUser, fpItem); userCnt++; break;
+			case 2: logInUserMenu(sales,items,&nMenu, users, transactions, fpUser, fpItem, fpCart); break;
+			case 3: adminMenu(&sales,&nMenu, fpUser, fpItem); break;
+			case 4: nExit(&nMenu, fpUser, fpItem, fpCart); break;
+			default: printf("\nINVALID INPUT\n\n"); break;
+		}
+	}while(nMenu != 4);
+
+	
+	return 0;
 }
