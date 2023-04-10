@@ -1,3 +1,15 @@
+/***************************************************************************************
+**********
+This is to certify that this project is my own work, based on my personal efforts in
+studying and applying the concepts learned. I have constructed the functions and their
+respective algorithms and corresponding code by myself. The program was run, tested,
+and debugged by my own efforts. I further certify that I have not copied in part or
+whole or otherwise plagiarized the work of other students and/or persons.
+
+<Bigalbal, Zhienj>, DLSU ID #12206806
+<De Guzman, Evan>, DLSU ID #12206180
+****************************************************************************************
+*********/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +60,7 @@ Personnel personnelList[MAX_PERSONNEL];
 Project projectList[MAX_PROJECTS];
 Task taskList[MAX_TASKS];
 // Declare the functions for Personnel, Project and Task management
-void addPersonnel();
+void addPersonnel(int numPersonnel);
 void updatePersonnel();
 void deletePersonnel();
 void archivePersonnel();
@@ -66,7 +78,7 @@ void showProjectDetails();
 char *getCurrentDate();
 char* getProjectName(int numProjects, int projectID);
 char* getPersonnelName(int numPersonnel,int personnelID);
-void showTodayTasks(int numTasks,int numProjects,int assignID);
+void showTodayTasks(int numTasks,int numProjects,int taskAssign);
 void showAssignedTask();
 void updateTaskStatus();
 int main() {
@@ -74,6 +86,7 @@ int main() {
     int numPersonnel = 0;
     int numProjects = 0;
     int numTasks = 0;
+    int taskAssign = taskList->assignID;
     char username[MAX_NAME_LEN];
     char password[MAX_NAME_LEN];
 	
@@ -135,13 +148,13 @@ scanf("%d", &choice);
                     updatePersonnel();
                     break;
                 case 3:
-                    deletePersonnel(numPersonnel);
+                    deletePersonnel(numTasks, numProjects, numProjects);
                     break;
                 case 4:
-                    archivePersonnel();
+                    archivePersonnel(numPersonnel);
                     break;
                 case 5:
-                    assignProject();
+                    assignProject(numProjects, numPersonnel);
                     break;
                 case 6:
                     break;
@@ -175,7 +188,7 @@ scanf("%d", &choice);
                     addTask();
                     break;
                 case 3:
-                    updateTask();
+                    updateTask(numTasks);
                     break;
                 case 4:
                     showPersonnelList(numPersonnel);
@@ -187,10 +200,10 @@ scanf("%d", &choice);
                     showProjectDetails();
                     break;
                 case 7:
-                    showDelayedTask(numPersonnel);
+                    showDelayedTask(numTasks, numProjects, numPersonnel);
                     break;
                 case 8:
-                    runProjectCompletion();
+                    runProjectCompletion(numTasks, numProjects);
                     break;
                 case 9:
                     break;
@@ -211,13 +224,13 @@ printf("Enter choice: ");
 scanf("%d", &choice);
             switch (choice) {
                 case 1:
-                    addProject();
+                   showTodayTasks(numTasks, numProjects, taskAssign);
                     break;
                 case 2:
                     addTask();
                     break;
                 case 3:
-                    updateTask();
+                    updateTask(numTasks);
                     break;
                 case 4:
                     break;
@@ -230,6 +243,14 @@ scanf("%d", &choice);
 
 return 0;
 }
+
+/*
+updateTask prints a certain task status and allows whoever the user is, given they are a registered user,
+the choice to change the current status of their assigned task
+@param numTasks - how many Tasks are made in file
+Precondition: All inputs are of correct corresponding data type
+*/
+
 void updateTask(int numTasks) {
     int taskID, choice;
     int personnelID = personnelList[0].personnelID; // get the ID of the logged-in user
@@ -297,6 +318,13 @@ void updateTask(int numTasks) {
     }
 }
 
+/*
+void ShowAssignedTask returns lines detailing Task ID, Name, Project ID, Start date and End date
+or No Assigned Tasks Found f or a given user ID.
+@param numTasks - how many Tasks are made in file
+Precondition: assignID input is of an integer data type
+*/
+
 void showAssignedTask(numTasks) {
     int assignID;
     printf("Enter your login user ID: ");
@@ -317,8 +345,14 @@ void showAssignedTask(numTasks) {
         printf("No assigned tasks found.\n");
     }
 }
-
-void showTodayTasks(int numTasks, int numProjects,int assignID) {
+/*
+showTodayTasks prints the tasks assigned to a user ID, given that the user ID is registered, and the day
+or it can print out no tasks assigned to you for today along with current date
+@param numTasks - how many Tasks are made in file
+@param numProjects - how many Projects are made in file
+@param assignID - the ID of the task
+*/
+void showTodayTasks(int numTasks, int numProjects, int taskAssign) {
     time_t now;
     struct tm *local;
     char curr_date[MAX_DATE_LEN];
@@ -333,7 +367,7 @@ void showTodayTasks(int numTasks, int numProjects,int assignID) {
     printf("------------------------------------------------------\n");
 
     for (int i = 0; i < numTasks; i++) {
-        if (strcmp(taskList[i].startdate, curr_date) <= 0 && strcmp(taskList[i].enddate, curr_date) >= 0 && taskList[i].assignID == assignID) {
+        if (strcmp(taskList[i].startdate, curr_date) <= 0 && strcmp(taskList[i].enddate, curr_date) >= 0 && taskList[i].assignID == taskAssign) {
             printf("%d\t%-16s\t%-16s\t%s\t%s\n", taskList[i].taskID, taskList[i].name, getProjectName(numProjects,taskList[i].projectID), taskList[i].startdate, taskList[i].enddate);
             found = 1;
         }
@@ -345,6 +379,13 @@ void showTodayTasks(int numTasks, int numProjects,int assignID) {
 }
 
 // Return the name of the personnel with the given ID
+/*
+getPersonnelName returns either a user name or NULL of a certain personnel. It will be
+NULL if the personnelID does not exist.
+@param numPersonnel - how many Personnels are made in file
+@param personnelID - ID of a certain personnel
+Precondition: Prior inputs such as personnelID is of valid data type.
+*/
 char* getPersonnelName(int numPersonnel,int personnelID) {
     for (int i = 0; i < numPersonnel; i++) {
         if (personnelList[i].personnelID == personnelID) {
@@ -353,7 +394,13 @@ char* getPersonnelName(int numPersonnel,int personnelID) {
     }
     return NULL;
 }
-
+/*
+getProjectName returns the project name or an unknown project. It will be Unknown if 
+projectID does not exist.
+@param numProjects - how many Projects are made in file
+@param projectID - ID of a certain project
+Precondition: Prior inputs such as projectID is of valid data type.
+*/
 char* getProjectName(int numProjects, int projectID) {
     for (int i = 0; i < numProjects; i++) {
         if (projectList[i].projectID == projectID) {
@@ -362,7 +409,9 @@ char* getProjectName(int numProjects, int projectID) {
     }
     return "Unknown";
 }
-
+/*
+getCurrentDate returns the date
+*/
 char *getCurrentDate() {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
@@ -370,6 +419,13 @@ char *getCurrentDate() {
     strftime(date, sizeof(date), "%m/%d/%Y", t);
     return date;
 }
+/*
+runProjectCompletion calculates how finished a certain project is and returns the calculated
+or if a project ID is not found, it will print Project not found.
+@param numTasks - how many Tasks are made in file
+@param numProjects - how many Projects are made in file
+Precondition: projectID input is of integer data type 
+*/
 void runProjectCompletion(int numTasks, int numProjects) {
     int projectId;
     printf("\nEnter the project ID: ");
@@ -406,7 +462,13 @@ void runProjectCompletion(int numTasks, int numProjects) {
     projectList[projectIndex].completion = (completedDuration / totalDuration) * 100;
     printf("Project completion calculated.\n");
 }
-
+/*
+showDelayedTask shows any task that is outside of the given end date by the manager
+@param numTasks - how many Tasks are made in file
+@param numProjects - how many Projects are made in file
+@param numPersonnel - how many Personnels are made in file
+Precondition: All prior inputs are made of correct corresponding data types.
+*/
 void showDelayedTask(int numTasks, int numProjects,int numPersonnel) {
     int count = 0;
     printf("\nDelayed Tasks:\n");
@@ -422,7 +484,12 @@ void showDelayedTask(int numTasks, int numProjects,int numPersonnel) {
         printf("No delayed tasks found.\n");
     }
 }
-
+/*
+showProjecctDetails prints out all the details of the project including a list of all Active Projects, their ID and a drop down of all details of a selected Project
+@param numTasks - how many Tasks are made in file
+@param numProjects - how many Projects are made in file
+Precondition: All prior inputs, such as Project ID, is made of correct corresponding data types.
+*/
 void showProjectDetails(numTasks,numProjects) {
     // Display the list of active projects
     printf("\nActive Projects:\n");
@@ -471,7 +538,12 @@ void showProjectDetails(numTasks,numProjects) {
         }
     }
 }
-
+/*
+assignTask assigns a certain task to a user ID, but also checks if the user ID already has a task assigned to them or if the task does not exist.
+@param numTasks - how many Tasks are made in file
+@param numPersonnel - how many Personnels are made in file
+Precondition: All prior inputs, such as taskID, task name and other properties of a task, are made with correct corressponding data types.
+*/
 void assignTask(numTasks,numPersonnel) {
     int taskID, personnelID, taskIndex, personnelIndex;
 
@@ -538,6 +610,12 @@ void assignTask(numTasks,numPersonnel) {
     printf("Task assigned successfully.\n");
 }
 
+/*
+showPersonnelList shows all registered Personnels in the file
+@param numPersonnel - how many Personnels are made in file
+Precondition: All prior inputs into the details of a personnel are made with correct
+corressponding data types.
+*/
 void showPersonnelList(int numPersonnel) {
     printf("\n---------------------\n");
     printf(" Active Personnel List\n");
@@ -554,6 +632,13 @@ void showPersonnelList(int numPersonnel) {
         }
     }
 }
+/*
+findTaskIndex returns a certain number i that is incrementing to find the corresponding taskID
+from the structure traskList.taskID. It can also return -1 if the taskID is not found
+@param numTasks - how many Tasks are made in file
+@param taskID - the ID given to a certain task
+Precondition: All prior inputs, such as taskID, are made with correct corresponding data types.
+*/
 int findTaskIndex(int numTasks,int taskID) {
     for (int i = 0; i < numTasks; i++) {
         if (taskList[i].taskID == taskID) {
@@ -562,7 +647,13 @@ int findTaskIndex(int numTasks,int taskID) {
     }
     return -1; // if taskID not found
 }
-
+/*
+updateTaskStatus prints all the details of a task and allows the user to update any of the details/values
+afterwards
+@param numTasks - how many Tasks are made in file
+Precondition: All inputs that will be made, such as taskID, will have a correct corresponding
+data types.
+*/
 void updateTaskStatus(numTasks) {
     int taskID, index;
     printf("\n---------------------\n");
@@ -643,7 +734,11 @@ void updateTaskStatus(numTasks) {
         printf("\nTask updated successfully.\n");
     }
 }
-
+/*
+addTask allows the registered user to enter a task and generate an ID for the file
+@param numTasks - how many Tasks are made in file
+Precondition: All inputs of string, integers and float are made with correct corresponding data types
+*/
 void addTask(numTasks) {
     Task newTask;
     char confirm;
@@ -705,7 +800,12 @@ void addTask(numTasks) {
         printf("\nTask not added.\n");
     }
 }
-
+/*
+addProject - allows the admin or manager to create a project, to be assigned.
+@param numProjects - how many Projects are made in file
+Precondition: All prior inputs are valid and all inputs of string, integers and float are made
+with correct corresponding data types.
+*/
 void addProject(numProjects) {
     Project newProject;
     char confirm;
@@ -756,6 +856,11 @@ void addProject(numProjects) {
 }
 
 // Implement the functions for Personnel management
+/*
+addPersonnel creates a new personnel
+@param numPersonnel - how many Personnels are made
+Precondition: All prior inputs are made with correct corresponding values and all inputs in the functions are valid.
+*/
 void addPersonnel(int numPersonnel) {
 Personnel newPersonnel;
 char confirm;
@@ -764,6 +869,7 @@ printf("   Add New Personnel\n");
 printf("---------------------\n");
 
 // Generate a new personnel ID
+
 newPersonnel.personnelID = numPersonnel + 1;
 
 // Get the new personnel information from the administrator
@@ -781,7 +887,7 @@ printf("\nConfirm to add new personnel? (Y/N): ");
 scanf(" %c", &confirm);
 
 if (confirm == 'Y' || confirm == 'y') {
-	FILE *fp = fopen("personel.txt", "w");
+	FILE *fp = fopen("personel.txt", "a");
     personnelList[numPersonnel] = newPersonnel;
     fprintf(fp, "%d,%s,%s,%d,%d\n", numPersonnel + 1, personnelList[numPersonnel].username,
            personnelList[numPersonnel].password, 1, 2);
@@ -792,6 +898,10 @@ if (confirm == 'Y' || confirm == 'y') {
     printf("New personnel not added.\n");
 }
 }
+/*
+updatePersonnel prints out an updated version of the details of a user given userID
+Precondition: personnelID is made with valid input
+*/
 void updatePersonnel() {
 int personnelID;
 printf("\n---------------------\n");
@@ -804,6 +914,13 @@ scanf("%d", &personnelID);
 
 printf("Personnel record updated successfully.\n");
 }
+/*
+deletePersonnel is the function that allows the admin to delete a user from its database
+@param numTasks - how many Tasks are made in file
+@param numProjects - how many Projects are made in file
+@param numPersonnel - how many Personnels are made in file
+Precondition: All inputs in the function are made with correct corresponding data types.
+*/
 void deletePersonnel(int numTasks,int numProjects ,int numPersonnel) {
     int personnelID, index;
     char confirm;
@@ -854,7 +971,12 @@ void deletePersonnel(int numTasks,int numProjects ,int numPersonnel) {
         }
     }
 }
-
+/*
+findPersonnelIndex runs through the number of numPersonnels to find an equal personnelID from the structure personnelList.personnelID
+@param numPersonnel - how many Personnels are made in file
+@param personnelID - ID of a certain personnel
+Precondition: All prior inputs, such as personnelID, are made with correct corresponding data types.
+*/
 int findPersonnelIndex(int numPersonnel, int personnelID) {
     for (int i = 0; i < numPersonnel; i++) {
         if (personnelList[i].personnelID == personnelID) {
@@ -863,7 +985,11 @@ int findPersonnelIndex(int numPersonnel, int personnelID) {
     }
     return -1; // Personnel not found
 }
-
+/*
+archivePersonnel allows admin to archive a certain personnel, making them inactive but not necessarily deleting them
+@param numPersonnel - how many Personnels are made in file
+Precondition: All inputs such as personnelID and confirmare made with correct corresponding data type.
+*/
 void archivePersonnel(int numPersonnel) {
     int personnelID;
     int personnelIndex;
@@ -900,15 +1026,20 @@ void archivePersonnel(int numPersonnel) {
         }
     }
 }
-
+/*
+assignProject allows admin to assign a project to a certain manager
+@param numProjects - how many Projects are made in file
+@param numPersonnel - how many Personnels are made in file
+Precondition: All inputs for projectID and personnelID are made with correct corresponding data type.
+*/
 void assignProject(int numProjects, int numPersonnel) {
     printf("\n---------------------\n");
     printf("   Assign Project\n");
     printf("---------------------\n");
-
+    int i;
     // Display all the active projects
     printf("Active Projects:\n");
-    for (int i = 0; i < numProjects; i++) {
+    for (i = 0; i < numProjects; i++) {
         if (projectList[i].status == 1) {
             printf("%d: %s\n", projectList[i].projectID, projectList[i].name);
         }
@@ -916,7 +1047,7 @@ void assignProject(int numProjects, int numPersonnel) {
 
     // Display all the active personnel with user access of 2 (Manager)
     printf("\nActive Managers:\n");
-    for (int i = 0; i < numPersonnel; i++) {
+    for (i = 0; i < numPersonnel; i++) {
         if (personnelList[i].active == 1 && personnelList[i].access == 2) {
             printf("%d: %s\n", personnelList[i].personnelID, personnelList[i].username);
         }
@@ -929,10 +1060,12 @@ void assignProject(int numProjects, int numPersonnel) {
     scanf("%d", &personnelID);
 
 }
+/*
+clearBuffers clears buffer
+*/
 void clearBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF) {
     }
 }
-
 
